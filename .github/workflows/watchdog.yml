@@ -1,0 +1,39 @@
+# Dead-man's switch for the Pi, run by GitHub, not by the Pi: a dead Pi cannot report itself.
+# Goes into the public repo as .github/workflows/watchdog.yml. Every 2 h it reads data.json:
+# the report must be under 8 h old (it is pushed every 6 h) and the bot must have checked
+# within 2 h of that report (it checks hourly). Otherwise it pings the phone (secret
+# NTFY_TOPIC) and fails, and GitHub emails the failure too.
+name: watchdog
+on:
+  schedule:
+    - cron: "23 */2 * * *"
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: is the bot alive?
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, sys, time, urllib.request
+          d = json.load(open("data.json"))
+          now = time.time()
+          problems = []
+          if now - d["as_of"] > 8 * 3600:
+              problems.append(f"no report for {(now - d['as_of']) / 3600:.0f} h: the Pi, its network or the report cron is down")
+          if d.get("bot_last_check") and d["as_of"] - d["bot_last_check"] > 2 * 3600:
+              problems.append(f"the bot had not checked for {(d['as_of'] - d['bot_last_check']) / 3600:.0f} h at the last report")
+          if not problems:
+              print("ok")
+              sys.exit()
+          msg = "; ".join(problems)
+          print(msg)
+          if os.environ.get("NTFY_TOPIC"):
+              urllib.request.urlopen(urllib.request.Request(
+                  f"https://ntfy.sh/{os.environ['NTFY_TOPIC']}", data=msg.encode(),
+                  headers={"Title": "trend bot watchdog", "Priority": "high", "Tags": "warning"}), timeout=20)
+          sys.exit(1)
+          EOF
