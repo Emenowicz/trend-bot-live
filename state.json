@@ -1,0 +1,32 @@
+{
+ "btc": 1.8699999999004235e-09,
+ "entry": null,
+ "halt_until": 1790274109122,
+ "trades": [
+  {
+   "t": 1790171484,
+   "side": "buy",
+   "qty": 0.00116696,
+   "price": 85606.9,
+   "reason": "close above SMA",
+   "paper": false
+  },
+  {
+   "t": 1790252509,
+   "side": "sell",
+   "qty": 0.00116696,
+   "price": 83566.9,
+   "reason": "news: Alpen says AI identified Liquid\u2019s $320M BTC exploit in an hour. Could a payout l",
+   "paper": false
+  }
+ ],
+ "short": null,
+ "capital_history": [
+  {
+   "t": 1790171484,
+   "capital": 100.0
+  }
+ ],
+ "cash": 97.550007617376,
+ "last_check": 1790251320
+}
