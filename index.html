@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bot trendowy BTC — wynik na żywo</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.32/dist/uPlot.min.css">
 <style>
@@ -130,6 +131,7 @@ function chart(el, series, data, fmt, height = 240) {
     return null;
   }
   return new uPlot({ width: el.clientWidth || 800, height, cursor: { y: false }, legend: { live: true },
+                     tzDate: ts => uPlot.tzDate(new Date(ts * 1e3), "Etc/UTC"),   // ticks at UTC midnight, as labelled
                      scales: { x: { time: true } }, axes: axes(fmt), series: [{ label: "data", value: (u, v) => v == null ? "—" : day(v) }, ...series] }, data, el);
 }
 
