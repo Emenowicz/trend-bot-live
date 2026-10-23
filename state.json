@@ -1,6 +1,6 @@
 {
- "btc": 0.0011546061099999999,
- "entry": 84359.6,
+ "btc": 6.1099999998717736e-09,
+ "entry": null,
  "halt_until": 1790274109122,
  "trades": [
   {
@@ -26,16 +26,39 @@
    "price": 84359.6,
    "reason": "close above SMA",
    "paper": false
+  },
+  {
+   "t": 1792713720,
+   "side": "sell",
+   "qty": 0.0011546,
+   "price": 81266.2,
+   "reason": "close below SMA",
+   "paper": false
+  },
+  {
+   "t": 1792713721,
+   "side": "open_short",
+   "price": 81324.2,
+   "reason": "close below SMA",
+   "paper": true
   }
  ],
- "short": null,
+ "short": {
+  "qty": 0.0012296462799511092,
+  "contracts": null,
+  "entry": 81324.2,
+  "funding": 0.0,
+  "fees": 0.049999999999999996,
+  "accrued_at": 1792713721.5385826,
+  "paper": true
+ },
  "capital_history": [
   {
    "t": 1790171484,
    "capital": 100.0
   }
  ],
- "cash": 0.050556321376,
- "last_check": 1792692120,
+ "cash": 93.786680886856,
+ "last_check": 1792713721,
  "near_sma_day": 20748
 }
