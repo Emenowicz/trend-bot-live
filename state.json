@@ -47,9 +47,9 @@
   "qty": 0.0012296462799511092,
   "contracts": null,
   "entry": 81324.2,
-  "funding": 0.7535889478356179,
+  "funding": 0.7605090595004801,
   "fees": 0.049999999999999996,
-  "accrued_at": 1794250920.299985,
+  "accrued_at": 1794272520.258491,
   "paper": true
  },
  "capital_history": [
@@ -59,6 +59,6 @@
   }
  ],
  "cash": 93.786680886856,
- "last_check": 1794250920,
+ "last_check": 1794272520,
  "near_sma_day": 20755
 }
