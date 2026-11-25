@@ -11,13 +11,13 @@
 :root {
   --ground:#f5f6f7; --surface:#fff; --ink:#111418; --ink-2:#4d5560; --muted:#7f8791; --line:#e1e4e8; --grid:#e7e9ec;
   --accent:#2a78d6; --accent-soft:rgba(42,120,214,.11); --hold:#eb6834; --buy:#008300; --sell:#e34948;
-  --good:#006300; --bad:#d03b3b;
+  --good:#006300; --bad:#d03b3b; --ai:#00b894;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme: dark) { :root {
   color-scheme:dark; --ground:#0e1013; --surface:#16191d; --ink:#eef1f4; --ink-2:#b3bac3; --muted:#7c848e;
   --line:#262a30; --grid:#22262b; --accent:#3987e5; --accent-soft:rgba(57,135,229,.17); --hold:#d95926;
-  --sell:#e66767; --good:#0ca30c; --bad:#e06666; } }
+  --sell:#e66767; --good:#0ca30c; --bad:#e06666; --ai:#00a888; } }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--ground); color:var(--ink); font:400 15.5px/1.6 var(--sans); }
 .wrap { max-width:1000px; margin:0 auto; padding-inline:18px; padding-block:30px 56px; display:grid; gap:18px; }
@@ -35,7 +35,7 @@ figure { margin:0; background:var(--surface); border:1px solid var(--line); bord
 figcaption .t { font-weight:600; } figcaption .d { font-size:13.5px; color:var(--ink-2); display:block; }
 .key { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--ink-2); }
 .key span { display:inline-flex; align-items:center; gap:6px; }
-.sw { display:inline-block; width:16px; border-top:2px solid var(--accent); } .sw.h { border-top-color:var(--hold); }
+.sw { display:inline-block; width:16px; border-top:2px solid var(--accent); } .sw.h { border-top-color:var(--hold); } .sw.a { border-top-color:var(--ai); }
 .sw.s { border-top:2px dashed var(--ink-2); }
 .tri { width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; }
 .tri.up { border-bottom:10px solid var(--buy); } .tri.down { border-top:10px solid var(--sell); }
@@ -82,7 +82,18 @@ footer { font-size:13px; color:var(--muted); border-top:1px solid var(--line); p
 
   <h2>Transakcje</h2>
   <div class="tbl"><table><thead><tr><th>Data</th><th>Akcja</th><th style="text-align:right">Cena</th><th style="text-align:right">BTC</th><th style="text-align:right">Wartość</th></tr></thead><tbody id="trades"></tbody></table></div>
-  <p class="note" id="shorts">Równolegle działa symulowany (papierowy) short na kontrakcie X-Perp, otwierany przy spadku pod średnią. Nie handluje prawdziwymi pieniędzmi, tylko zbiera dane.</p>
+
+  <h2>Na papierze, bez prawdziwych pieniędzy</h2>
+  <p class="sub">Dwa eksperymenty obok bota, które tylko zbierają dane. Short na kontrakcie X-Perp otwiera się, gdy bot schodzi do USDC, i zamyka przy powrocie nad średnią. Liczony jest po bieżącej cenie spot, z prowizją i naliczonym finansowaniem. Analityk AI to model językowy Jev, który codziennie wybiera BTC albo USDC.</p>
+  <div class="tiles">
+    <div class="tile"><span class="k">Short na X-Perp</span><span class="v" id="t-sh">—</span><span class="s" id="t-sh-s"></span></div>
+    <div class="tile"><span class="k">Analityk AI</span><span class="v" id="t-ai">—</span><span class="s" id="t-ai-s"></span></div>
+  </div>
+  <figure>
+    <figcaption><span class="t">Analityk AI kontra reguła SMA 50, przeliczone na 100 USDC</span><span class="d" id="ai-sum">Po każdym zamknięciu dnia Jev dostaje stan rynku i nagłówki z ostatnich 24 godzin i wybiera pozycję na kolejny dzień. Obok ta sama reguła SMA 50 i trzymanie BTC od tego samego dnia, z cen zamknięcia i z prowizją 0,125% przy każdej zmianie, dlatego różnią się trochę od prawdziwego bota powyżej. Dzień bez decyzji AI liczy się dla wszystkich trzech jako płaski.</span></figcaption>
+    <div class="key"><span><i class="sw a"></i>AI</span><span><i class="sw"></i>SMA 50</span><span><i class="sw h"></i>trzymanie BTC</span></div>
+    <div class="chart" id="c-ai"></div>
+  </figure>
 
   <h2>Dla porównania: ta sama reguła w ostatnich dwóch latach</h2>
   <p class="sub">To <b>backtest, a nie wynik bota</b>: symulacja reguły na historycznych cenach, z prowizjami. Pokazuje, jak strategia się zachowuje. W hossie zwykle zostaje w tyle za trzymaniem BTC, a przy spadkach traci wyraźnie mniej.</p>
@@ -172,9 +183,26 @@ Promise.all([fetch("data.json").then(r => r.json()), fetch("backtest.json").then
     `<tr><td>${day(t.t)}</td><td>${t.side === "buy" ? "kupno" : "sprzedaż"}</td><td class="n">${num(t.price, 1)}</td>` +
     `<td class="n">${t.qty != null ? num(t.qty, 8) : "—"}</td><td class="n">${t.value != null ? num(t.value, 2) + " USDC" : "—"}</td></tr>`).join("")
     : '<tr><td colspan="5" class="empty">Jeszcze brak transakcji.</td></tr>';
-  const ps = D.paper_shorts.filter(t => t.side === "open_short").length;
-  if (ps || D.short_open) document.getElementById("shorts").textContent +=
-    ` Dotąd otwarto ${ps} papierowych shortów${D.short_open ? ", jeden jest otwarty" : ""}.`;
+  const sh = D.short;   // absent in older data.json
+  if (sh) {
+    setv("t-sh", `${sh.pnl > 0 ? "+" : sh.pnl < 0 ? "−" : ""}${num(Math.abs(sh.pnl), 2)} USDC`, sign(sh.pnl));
+    document.getElementById("t-sh-s").textContent = `${pct(sh.pnl / sh.notional)} · otwarty ${day(sh.t)} po ${num(sh.entry, 1)}, finansowanie ${num(sh.funding, 2)} USDC`;
+  } else {
+    setv("t-sh", "zamknięty");
+    document.getElementById("t-sh-s").textContent = "otworzy się przy następnym spadku pod średnią";
+  }
+  const A = D.ai_paper;
+  if (A) {
+    setv("t-ai", pct(A.ai_pct), sign(A.ai_pct));
+    document.getElementById("t-ai-s").textContent = `zmian pozycji: ${A.switches.ai} · po zamknięciu ${day(A.last_day)}: ${A.last}`;
+    document.getElementById("ai-sum").textContent += ` Od ${day(A.t[0])}: AI ${pct(A.ai_pct)} (zmian: ${A.switches.ai}), ` +
+      `SMA 50 ${pct(A.sma_pct)} (zmian: ${A.switches.sma}), trzymanie ${pct(A.hold_pct)}. Ta sama decyzja w ${Math.round(A.agree * 100)}% dni.`;
+  }
+  chart(document.getElementById("c-ai"), [
+    { label: "AI", stroke: tok("--ai"), width: 2, value: (u, v) => v == null ? "—" : num(v, 2) },
+    { label: "SMA 50", stroke: tok("--accent"), width: 2, value: (u, v) => v == null ? "—" : num(v, 2) },
+    { label: "trzymanie", stroke: tok("--hold"), width: 2, value: (u, v) => v == null ? "—" : num(v, 2) }],
+    A ? [A.t, A.ai, A.sma, A.hold] : [[]], v => num(v));
 
   if (B) {
     const n = B.bot.length - 1;
