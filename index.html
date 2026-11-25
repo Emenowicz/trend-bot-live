@@ -183,13 +183,17 @@ Promise.all([fetch("data.json").then(r => r.json()), fetch("backtest.json").then
     `<tr><td>${day(t.t)}</td><td>${t.side === "buy" ? "kupno" : "sprzedaż"}</td><td class="n">${num(t.price, 1)}</td>` +
     `<td class="n">${t.qty != null ? num(t.qty, 8) : "—"}</td><td class="n">${t.value != null ? num(t.value, 2) + " USDC" : "—"}</td></tr>`).join("")
     : '<tr><td colspan="5" class="empty">Jeszcze brak transakcji.</td></tr>';
+  const usd = x => `${x > 0 ? "+" : x < 0 ? "−" : ""}${num(Math.abs(x), 2)} USDC`;
   const sh = D.short;   // absent in older data.json
+  const done = D.paper_shorts.filter(t => t.side === "close_short" && t.pnl != null);
+  const banked = done.reduce((s, t) => s + t.pnl, 0);
+  const past = done.length ? ` · zamknięte (${done.length}): ${usd(banked)}` : "";
   if (sh) {
-    setv("t-sh", `${sh.pnl > 0 ? "+" : sh.pnl < 0 ? "−" : ""}${num(Math.abs(sh.pnl), 2)} USDC`, sign(sh.pnl));
-    document.getElementById("t-sh-s").textContent = `${pct(sh.pnl / sh.notional)} · otwarty ${day(sh.t)} po ${num(sh.entry, 1)}, finansowanie ${num(sh.funding, 2)} USDC`;
+    setv("t-sh", usd(sh.pnl + banked), sign(sh.pnl + banked));
+    document.getElementById("t-sh-s").textContent = `otwarty ${day(sh.t)} po ${num(sh.entry, 1)}: ${usd(sh.pnl)} (${pct(sh.pnl / sh.notional)}), finansowanie ${num(sh.funding, 2)} USDC` + past;
   } else {
-    setv("t-sh", "zamknięty");
-    document.getElementById("t-sh-s").textContent = "otworzy się przy następnym spadku pod średnią";
+    setv("t-sh", done.length ? usd(banked) : "brak", sign(banked));
+    document.getElementById("t-sh-s").textContent = "teraz zamknięty, otworzy się przy następnym spadku pod średnią" + past;
   }
   const A = D.ai_paper;
   if (A) {
